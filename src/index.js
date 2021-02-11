@@ -1,56 +1,61 @@
 const express = require('express');
+const { uuid } = require('uuidv4');
 
 const app = express();
 
 app.use(express.json());
 
+const projects = [];
+
 //Busca informacoes no backend
 app.get('/projects', (request, response) => { 
   const query = request.query;
 
-  console.log(query);
+  const results = query.title ? projects.filter((project) => project.title.includes(query.title)) : projects;
 
-  return response.json([
-    'Projeto 1',
-    'Projeto 2',
-    'Projeto 3'
-  ]);
+  return response.json(results);
 });
 
 //adiciona informacoes no backend
 app.post('/projects', (request, response) => {
   const body = request.body;
 
-  console.log(body);
+  const project = { id: uuid(), title: body.title, owner: body.owner };
+  projects.push(project);
 
-  return response.json([
-    'Projeto 1',
-    'Projeto 2',
-    'Projeto 3',
-    'Projeto 4'
-  ]);
+  return response.json(project);
 });
 
-//altera informacoes no backend
+//altera informacoes no backend (atualiza)
 app.put('/projects/:id', (request, response) => {
-  const params = request.params;
+  const params = request.params; //route params
+  const body = request.body;
 
-  console.log(params);
+  const projectIndex = projects.findIndex((project) => project.id === params.id);
 
-  return response.json([
-    'Projeto 4',
-    'Projeto 3',
-    'Projeto 2',
-    'Projeto 1'
-  ]);
+  if (projectIndex < 0) {
+    return response.status(400).json({ "error": "No Project Found." });
+  }
+
+  const project = { id: params.id, title: body.title, owner: body.owner };
+  projects[projectIndex] = project;
+
+  return response.json(project);
 });
 
 //deleta informacoes no backend
 app.delete('/projects/:id', (request, response) => {
-  return response.json([
-    'Projeto 4',
-    'Projeto 3',
-  ]);
+  const params = request.params;
+
+  const projectIndex = projects.findIndex((project) => project.id === params.id);
+
+  if (projectIndex < 0) {
+    return response.status(400).json({ "error": "No Project Found." });
+  }
+
+  projects.splice(projectIndex, 1); //remover item do array
+
+  return response.status(204).send();
 })
 
 app.listen(3333, () => {
