@@ -1,5 +1,5 @@
 const express = require('express');
-const { uuid } = require('uuidv4');
+const { uuid, isUuid } = require('uuidv4');
 
 const app = express();
 
@@ -7,7 +7,8 @@ app.use(express.json());
 
 const projects = [];
 
-function logRequest(request, responde, next) {
+//middleware que mostra o nome do metodo que interceptou e o url da requisicao
+function logRequest(request, response, next) {
   const method = request.method;
   const url = request.url;
 
@@ -15,6 +16,15 @@ function logRequest(request, responde, next) {
   console.log(logLabel);
 
   return next(); //Próximo middleware
+}
+
+function validadeRequestId(request, response, next) {
+  const params = request.params;
+
+  if (!isUuid(params.id)) {
+    return response.status(400).json({ "error": "Id is invalid!" });
+  }
+  return next(); 
 }
 
 app.use(logRequest);
@@ -39,7 +49,7 @@ app.post('/projects', (request, response) => {
 });
 
 //altera informacoes no backend (atualiza)
-app.put('/projects/:id', (request, response) => {
+app.put('/projects/:id', validadeRequestId, (request, response) => {
   const params = request.params; //route params
   const body = request.body;
 
@@ -56,7 +66,7 @@ app.put('/projects/:id', (request, response) => {
 });
 
 //deleta informacoes no backend
-app.delete('/projects/:id', (request, response) => {
+app.delete('/projects/:id', validadeRequestId, (request, response) => {
   const params = request.params;
 
   const projectIndex = projects.findIndex((project) => project.id === params.id);
