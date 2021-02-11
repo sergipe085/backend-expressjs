@@ -7,6 +7,18 @@ app.use(express.json());
 
 const projects = [];
 
+function logRequest(request, responde, next) {
+  const method = request.method;
+  const url = request.url;
+
+  const logLabel = `[${method}] ${url}`;
+  console.log(logLabel);
+
+  return next(); //Próximo middleware
+}
+
+app.use(logRequest);
+
 //Busca informacoes no backend
 app.get('/projects', (request, response) => { 
   const query = request.query;
